@@ -1,0 +1,145 @@
+# CAPM-and-BETA
+# # TASK #1: IMPORT LIBRARIES/DATASETS AND PERFORM EXPLORATORY DATA ANALYSIS
+
+import pandas as pd
+import plotly.express as px
+from copy import copy
+import matplotlib.pyplot as plt
+import numpy as np
+import plotly.figure_factory as ff
+import plotly.graph_objects as go
+
+from jupyterthemes import jtplot # Jupyter theme
+jtplot.style(theme = 'monokai', context= 'notebook', ticks= True, grid= False)
+
+# Read the stock data file
+stocks_df = pd.read_csv('stocks_dataset.csv')
+stocks_df
+
+# Dataframe info
+stocks_df.info()
+
+stocks_df.describe()
+
+# Function to normalize the prices based on the initial price
+stocks_df
+
+import pandas as pd
+import plotly.express as px
+
+def normalize(df):
+    x = df.copy()
+    for i in x.columns[1:]:
+        x[i] = x[i]/x[i][0]
+    return x
+
+normalize(stocks_df)
+
+# Function to plot interactive plot
+import plotly.express as px
+
+def interactive_plot(df, title): 
+        fig = px.line(title = title)
+        for i in df.columns[1:]:
+            fig.add_scatter(x = df['Date'], y = df[i], name = i)
+        fig.show()
+
+# Plot interactive chart
+interactive_plot(stocks_df, 'Prices')
+
+# Plot normalized interactive chart
+interactive_plot(normalize(stocks_df), 'Normalized Prices')
+
+# Function to calculate the daily returns 
+
+def stocks_daily_return(df):
+    stocks_daily_return = df.copy()
+
+    for i in df.columns[1:]:
+      for j in range(1, len(df)):
+        stocks_daily_return[i][j] = ((df[i][j] - df[i][j-1]) / df[i][j-1]) *100
+      stocks_daily_return[i][0]=0
+
+    return stocks_daily_return
+
+# Tesla stock selected
+stocks_daily_return['TSLA']
+
+# S&P500 (Market)
+stocks_daily_return['sp500']
+
+# Scatter plot between the selected stock and the S&P500 (Market)
+stocks_daily_return.plot(kind='scatter', x = 'sp500', y = 'TSLA', color='w')
+
+# Polynomial between the selected stock and the S&P500 
+beta, alpha = np.polyfit(stocks_daily_return['sp500'], stocks_daily_return['TSLA'], 1)
+print('Beta for {} stock is = {} and alpha is = {}'.format('TSLA', beta, alpha))
+
+# Scatter plot and the straight line on one plot
+stocks_daily_return.plot(kind = 'scatter', x = 'sp500', y = 'TSLA', color = 'w')
+
+# Straight line equation with alpha and beta parameters 
+plt.plot(stocks_daily_return['sp500'], beta * stocks_daily_return['sp500'] + alpha, '-', color = 'r')
+
+beta, alpha = np.polyfit(stocks_daily_return['sp500'], stocks_daily_return['TSLA'], 1)
+print('Beta for {} stock is = {} and alpha is = {}'.format('TSLA', beta, alpha))
+
+stocks_daily_return.plot(kind = 'scatter', x = 'sp500', y = 'TSLA', color = 'w')
+
+plt.plot(stocks_daily_return['sp500'], beta * stocks_daily_return['sp500'] + alpha, '-', color = 'r')
+
+# Beta for every stock 
+beta 
+
+# Average daily rate of return for S&P500
+stocks_daily_return['sp500'].mean()
+
+# Annualized rate of return for S&P500
+rm=stocks_daily_return['sp500'].mean() * 252
+rm
+
+# Assume risk free rate is zero
+rf = 0
+
+# Return for TESLA using CAPM  
+ER_TESLA= rf + (beta* (rm-rf))
+
+ER_TESLA
+
+# Placeholder for all betas and alphas (empty dictionaries)
+beta = {}
+alpha = {}
+
+# Loop on every stock daily return
+for i in stocks_daily_return.columns:
+
+  # Ignoring the date and S&P500 Columns 
+  if i != 'Date' and i != 'sp500':
+    # plot a scatter plot between each individual stock and the S&P500 (Market)
+    stocks_daily_return.plot(kind = 'scatter', x = 'sp500', y = i, color = 'w')
+
+    # Fit a polynomial between each stock and the S&P500 (Poly with order = 1 is a straight line)
+    b, a = np.polyfit(stocks_daily_return['sp500'], stocks_daily_return[i], 1)
+
+    plt.plot(stocks_daily_return['sp500'], b * stocks_daily_return['sp500'] + a, '-', color = 'r')
+
+    beta[i] = b
+
+    alpha[i] = a
+
+    plt.show()
+
+# Interactive way
+for i in stocks_daily_return.columns:
+
+  if i != 'Date' and i != 'sp500':
+
+    # Plotly express to plot the scatter plot for every stock vs. the S&P500
+    fig = px.scatter(stocks_daily_return, x = 'sp500', y = i, title = i)
+
+    # Straight line to the data and obtain beta and alpha
+    b, a = np.polyfit(stocks_daily_return['sp500'], stocks_daily_return[i], 1)
+
+    # Plot of straight line 
+    fig.add_scatter(x = stocks_daily_return['sp500'], y = b*stocks_daily_return['sp500'] + a)
+    fig.show()
